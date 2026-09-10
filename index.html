@@ -607,6 +607,16 @@ button,a,.nav-item,.bn-item,.car-card,.plan-card,.pay-method,.quick-action{touch
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:var(--border-strong)}
 
+
+/* ── STATUS BADGES ── */
+.status-badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;white-space:nowrap}
+.status-negociacion{background:var(--amber-light);color:var(--amber);border:1px solid #fde68a}
+.status-precio_acordado{background:var(--green-light);color:var(--green);border:1px solid #a7f3d0}
+.status-reserva_pendiente{background:var(--amber-light);color:var(--amber);border:1px solid #fde68a}
+.status-reserva_pagada{background:var(--green-light);color:var(--green);border:1px solid #a7f3d0}
+.status-en_proceso{background:var(--accent-light);color:var(--accent);border:1px solid var(--accent-light2)}
+.status-completada{background:var(--green-light);color:var(--green);border:1px solid #a7f3d0}
+.status-cancelada{background:var(--red-light);color:var(--red);border:1px solid #fecaca}
 </style>
 </head>
 <body>
@@ -650,6 +660,46 @@ button,a,.nav-item,.bn-item,.car-card,.plan-card,.pay-method,.quick-action{touch
   <button type="button" class="gallery-nav next" onclick="galleryNav(1)">›</button>
   <div class="gallery-dots" id="gallery-dots"></div>
 </div>
+
+<!-- NEGOTIATION MODAL -->
+<div class="modal-overlay hidden" id="negotiation-modal">
+  <div class="modal-box" style="max-width:700px;padding:0;display:flex;flex-direction:column;max-height:90vh">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;background:#fff;border-radius:var(--radius-xl) var(--radius-xl) 0 0">
+      <div id="neg-car-img" style="width:56px;height:44px;border-radius:8px;overflow:hidden;background:var(--bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px">🚗</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:0.95rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="neg-car-name">Vehículo</div>
+        <span id="neg-status-badge" class="status-badge status-negociacion">💬 Negociación</span>
+      </div>
+      <button type="button" onclick="closeNegotiationModal()" style="background:var(--bg);border:1px solid var(--border);color:var(--text2);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+    </div>
+    <div id="neg-commission-block" style="padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0"></div>
+    <div id="neg-history" style="flex:1;overflow-y:auto;padding:14px 20px;display:flex;flex-direction:column;gap:6px;background:var(--bg);-webkit-overflow-scrolling:touch"></div>
+    <div id="neg-actions" style="padding:14px 20px;border-top:1px solid var(--border);background:#fff;border-radius:0 0 var(--radius-xl) var(--radius-xl);flex-shrink:0"></div>
+  </div>
+</div>
+
+<!-- RESERVATION MODAL -->
+<div class="modal-overlay hidden" id="reservation-modal">
+  <div class="modal-box" style="max-width:520px">
+    <button type="button" class="modal-close" onclick="document.getElementById('reservation-modal').classList.add('hidden')">✕</button>
+    <div style="font-size:36px;margin-bottom:10px">📋</div>
+    <div class="modal-title">Reservar vehículo</div>
+    <div class="modal-sub" id="res-car-name">Vehículo</div>
+    <div id="res-summary" style="margin-bottom:14px"></div>
+    <div id="res-recars-info" style="margin-bottom:16px"></div>
+    <div style="background:var(--bg);border-radius:8px;padding:10px 14px;font-size:0.75rem;color:var(--text3);margin-bottom:16px">
+      Referencia de operación: <strong id="res-op-ref"></strong>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <button type="button" class="btn-outline" onclick="document.getElementById('reservation-modal').classList.add('hidden')">Cancelar</button>
+      <button type="button" class="form-submit" onclick="confirmReservationPaid()">✅ Ya transferí la seña</button>
+    </div>
+    <div style="margin-top:12px;font-size:0.75rem;color:var(--text3);text-align:center">Al confirmar, el vehículo quedará reservado. ReCars verificará el pago.</div>
+  </div>
+</div>
+
+<!-- MY OPERATIONS PAGE -->
+
 <!-- NOTIFICATION MODAL -->
 <div class="modal-overlay hidden" id="notif-modal">
   <div class="modal-box" style="max-width:500px;max-height:80vh;display:flex;flex-direction:column">
@@ -1052,6 +1102,7 @@ button,a,.nav-item,.bn-item,.car-card,.plan-card,.pay-method,.quick-action{touch
       <div class="nav-item" onclick="navigate('noticias')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/></svg><span class="nav-label">Noticias</span></div>
       <div class="nav-section-label">Mi cuenta</div>
       <div class="nav-item" onclick="navigate('suscripcion')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="nav-label">Suscripción</span></div>
+      <div class="nav-item" onclick="navigate('operations')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span class="nav-label">Mis operaciones</span></div>
       <div class="nav-item" onclick="openAlerts()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="nav-label">Mis alertas</span></div>
       <div class="nav-item" onclick="navigate('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nav-label">Mi Agencia</span></div>
     </div>
@@ -1299,17 +1350,114 @@ button,a,.nav-item,.bn-item,.car-card,.plan-card,.pay-method,.quick-action{touch
 
     <!-- SUSCRIPCION -->
     <div class="page" id="page-suscripcion">
-      <div class="page-header"><div><div class="page-title">Suscripción ReCars+</div><div class="page-subtitle">Acceso ilimitado a contactos y funciones premium</div></div></div>
-      <div id="sub-status-card" style="background:var(--navy3);border:1px solid var(--card-border);border-radius:var(--radius-lg);padding:24px;margin-bottom:28px;max-width:600px">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-          <div><div style="font-size:0.75rem;color:var(--text3);margin-bottom:6px">ESTADO</div><div id="sub-status-label" style="font-size:1.1rem;font-weight:600">Cargando...</div><div id="sub-expiry-label" style="font-size:0.8rem;color:var(--text2);margin-top:4px"></div><div class="countdown-bar" id="sub-countdown-bar" style="display:none;width:200px"><div class="countdown-fill" id="sub-countdown-fill"></div></div></div>
-          <div style="text-align:right"><div style="font-size:0.75rem;color:var(--text3);margin-bottom:4px">TOKENS</div><div style="font-size:2rem;font-weight:700;color:var(--amber)" id="sub-tokens-big">0</div><div style="font-size:0.72rem;color:var(--text3)">disponibles</div></div>
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">Planes ReCars</div>
+          <div class="page-subtitle">Sin tokens. Sin límites. Solo comisión por operación.</div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;max-width:800px;margin-bottom:28px">
-        <div class="plan-card" onclick="openPayment('trial')"><div style="font-size:32px;margin-bottom:8px">🎁</div><div style="font-size:1rem;font-weight:700">Prueba Gratis</div><div class="plan-price" style="color:var(--green)">$0</div><div class="plan-period">30 días gratis</div><div class="plan-features"><div class="plan-feature">✅ 5 contactos desbloqueados</div><div class="plan-feature">✅ Publicar vehículos</div><div class="plan-feature">✅ Matching automático</div></div></div>
-        <div class="plan-card recommended" onclick="openPayment('monthly')"><div style="font-size:32px;margin-bottom:8px">⭐</div><div style="font-size:1rem;font-weight:700">ReCars+ Mensual</div><div class="plan-price" style="color:var(--accent2)">$50.000</div><div class="plan-period">por mes</div><div class="plan-features"><div class="plan-feature">✅ Contactos ilimitados</div><div class="plan-feature">✅ 10 tokens/mes</div><div class="plan-feature">✅ Destacar publicaciones</div><div class="plan-feature">✅ Soporte prioritario</div></div></div>
-        <div class="plan-card" onclick="openPayment('annual')"><div style="font-size:32px;margin-bottom:8px">🏆</div><div style="font-size:1rem;font-weight:700">ReCars+ Anual</div><div class="plan-price" style="color:var(--amber)">$480.000</div><div class="plan-period">por año · ahorrás $120.000</div><div class="plan-features"><div class="plan-feature">✅ Todo lo de Mensual</div><div class="plan-feature">✅ 150 tokens incluidos</div><div class="plan-feature">✅ Badge verificado</div></div></div>
+
+      <!-- Current status -->
+      <div id="sub-status-card" style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:28px;max-width:700px;box-shadow:var(--shadow)">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+          <div>
+            <div style="font-size:0.72rem;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">PLAN ACTUAL</div>
+            <div id="sub-status-label" style="font-size:1.1rem;font-weight:700;color:var(--text)">Cargando...</div>
+            <div id="sub-expiry-label" style="font-size:0.82rem;color:var(--text2);margin-top:4px"></div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:0.72rem;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.06em">COMISIÓN POR OPERACIÓN</div>
+            <div style="font-size:2rem;font-weight:700;color:var(--accent)" id="sub-commission-display">2%</div>
+            <div style="font-size:0.75rem;color:var(--text3)">sobre precio acordado</div>
+          </div>
+        </div>
+        <div class="countdown-bar" id="sub-countdown-bar" style="display:none;margin-top:16px"><div class="countdown-fill" id="sub-countdown-fill"></div></div>
+      </div>
+
+      <!-- Plans -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;max-width:860px;margin-bottom:32px">
+        <!-- FREE -->
+        <div style="background:#fff;border:2px solid var(--border);border-radius:var(--radius-lg);padding:28px;box-shadow:var(--shadow)">
+          <div style="font-size:0.72rem;font-weight:700;color:var(--text3);letter-spacing:0.1em;margin-bottom:12px">GRATIS</div>
+          <div style="font-size:2.2rem;font-weight:800;color:var(--text);letter-spacing:-0.04em;margin-bottom:4px">$0</div>
+          <div style="font-size:0.82rem;color:var(--text3);margin-bottom:20px">para siempre</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;font-size:0.84rem">
+            <div style="display:flex;gap:10px;align-items:center"><span style="color:var(--green)">✓</span> Publicar vehículos</div>
+            <div style="display:flex;gap:10px;align-items:center"><span style="color:var(--green)">✓</span> Buscar y contactar agencias</div>
+            <div style="display:flex;gap:10px;align-items:center"><span style="color:var(--green)">✓</span> Match automático</div>
+            <div style="display:flex;gap:10px;align-items:center"><span style="color:var(--green)">✓</span> Chat y negociación</div>
+            <div style="display:flex;gap:10px;align-items:center"><span style="color:var(--green)">✓</span> Reservas y operaciones</div>
+            <div style="display:flex;gap:10px;align-items:center;font-weight:600;color:var(--text)"><span style="color:var(--accent)">💰</span> Comisión ReCars: <strong>2%</strong></div>
+          </div>
+          <div style="padding:12px;background:var(--bg);border-radius:8px;font-size:0.78rem;color:var(--text2);text-align:center">Plan actual para cuentas nuevas</div>
+        </div>
+
+        <!-- PRO -->
+        <div style="background:var(--accent);border:2px solid var(--accent);border-radius:var(--radius-lg);padding:28px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(37,99,235,0.25)" onclick="openPayment('monthly')">
+          <div style="position:absolute;top:14px;right:-22px;background:rgba(255,255,255,0.2);color:#fff;font-size:0.6rem;font-weight:700;padding:3px 30px;transform:rotate(35deg);letter-spacing:0.08em">RECOMENDADO</div>
+          <div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:0.1em;margin-bottom:12px">PRO MENSUAL</div>
+          <div style="font-size:2.2rem;font-weight:800;color:#fff;letter-spacing:-0.04em;margin-bottom:4px">$50.000</div>
+          <div style="font-size:0.82rem;color:rgba(255,255,255,0.7);margin-bottom:20px">por mes</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;font-size:0.84rem;color:#fff">
+            <div style="display:flex;gap:10px;align-items:center"><span>✓</span> Todo lo del plan gratis</div>
+            <div style="display:flex;gap:10px;align-items:center"><span>🚀</span> Mayor exposición de vehículos</div>
+            <div style="display:flex;gap:10px;align-items:center"><span>🎯</span> Match prioritario</div>
+            <div style="display:flex;gap:10px;align-items:center"><span>🔥</span> Vehículos destacados</div>
+            <div style="display:flex;gap:10px;align-items:center"><span>📊</span> Estadísticas avanzadas</div>
+            <div style="display:flex;gap:10px;align-items:center"><span>⭐</span> Perfil premium verificado</div>
+            <div style="display:flex;gap:10px;align-items:center;font-weight:700"><span>💰</span> Comisión ReCars: <strong>1.5%</strong></div>
+          </div>
+          <button type="button" onclick="openPayment('monthly')" style="width:100%;padding:12px;border-radius:8px;background:#fff;color:var(--accent);border:none;cursor:pointer;font-weight:700;font-size:0.9rem">Activar PRO — $50.000/mes</button>
+        </div>
+
+        <!-- PRO ANNUAL -->
+        <div style="background:#fff;border:2px solid var(--border);border-radius:var(--radius-lg);padding:28px;box-shadow:var(--shadow);cursor:pointer" onclick="openPayment('annual')">
+          <div style="font-size:0.72rem;font-weight:700;color:var(--text3);letter-spacing:0.1em;margin-bottom:12px">PRO ANUAL</div>
+          <div style="font-size:2.2rem;font-weight:800;color:var(--text);letter-spacing:-0.04em;margin-bottom:4px">$480.000</div>
+          <div style="font-size:0.82rem;color:var(--text3);margin-bottom:4px">por año</div>
+          <div style="font-size:0.78rem;color:var(--green);font-weight:600;margin-bottom:20px">Ahorrás $120.000</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;font-size:0.84rem">
+            <div style="display:flex;gap:10px;align-items:center"><span style="color:var(--green)">✓</span> Todo lo del plan PRO</div>
+            <div style="display:flex;gap:10px;align-items:center;font-weight:600;color:var(--accent)"><span>💰</span> Comisión ReCars: <strong>1.5%</strong></div>
+          </div>
+          <button type="button" onclick="openPayment('annual')" style="width:100%;padding:12px;border-radius:8px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-weight:700;font-size:0.9rem">Activar PRO Anual</button>
+        </div>
+      </div>
+
+      <!-- How commissions work -->
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;max-width:700px;box-shadow:var(--shadow)">
+        <div style="font-size:0.9rem;font-weight:700;margin-bottom:16px;color:var(--text)">💡 ¿Cómo funciona la comisión?</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div style="background:var(--bg);border-radius:var(--radius);padding:14px">
+            <div style="font-size:0.75rem;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">Ejemplo FREE (2%)</div>
+            <div style="font-size:0.82rem;color:var(--text2);margin-bottom:4px">Precio acordado: <strong>$20.000.000</strong></div>
+            <div style="font-size:0.82rem;color:var(--red);margin-bottom:4px">Comisión ReCars: <strong>$400.000</strong></div>
+            <div style="font-size:0.82rem;color:var(--text);font-weight:700">El comprador paga: <strong>$20.400.000</strong></div>
+          </div>
+          <div style="background:var(--accent-light);border:1px solid var(--accent-light2);border-radius:var(--radius);padding:14px">
+            <div style="font-size:0.75rem;color:var(--accent);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">Ejemplo PRO (1.5%)</div>
+            <div style="font-size:0.82rem;color:var(--text2);margin-bottom:4px">Precio acordado: <strong>$20.000.000</strong></div>
+            <div style="font-size:0.82rem;color:var(--accent);margin-bottom:4px">Comisión ReCars: <strong>$300.000</strong></div>
+            <div style="font-size:0.82rem;color:var(--text);font-weight:700">El comprador paga: <strong>$20.300.000</strong></div>
+          </div>
+        </div>
+        <div style="font-size:0.8rem;color:var(--text3);line-height:1.6">
+          La comisión se calcula sobre el <strong>precio final acordado</strong> en la negociación. 
+          El vendedor recibe su precio. ReCars cobra solo la diferencia por transferencia bancaria.
+        </div>
+      </div>
+    </div>
+
+    <!-- OPERATIONS PAGE -->
+    <div class="page" id="page-operations">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">Mis operaciones</div>
+          <div class="page-subtitle">Historial de negociaciones, reservas y ventas</div>
+        </div>
+      </div>
+      <div id="my-operations-list" style="display:flex;flex-direction:column;gap:12px">
+        <div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Sin operaciones aún</div><div class="empty-sub">Negociá un vehículo para ver tus operaciones acá</div></div>
       </div>
     </div>
 
@@ -1570,11 +1718,35 @@ var COEF_B = [
 
 // ══ SUBSCRIPTION ══
 var SUB_KEY = 'recars_subscription';
+// ── COMMISSION CONFIG ──
+var FREE_COMMISSION_RATE = 0.02;   // 2% plan gratis
+var PRO_COMMISSION_RATE  = 0.015;  // 1.5% plan pro
+var RECARS_CBU   = '0000000000000000000000'; // CBU ReCars (configurar)
+var RECARS_ALIAS = 'RECARS.COMISIONES';
+var RECARS_TITULAR = 'ReCars SRL';
+var RESERVATION_AMOUNT = 500000; // $500.000 por defecto (configurable)
+
 var PLANS = {
-  trial:   { name: 'Prueba Gratis 30 días', days: 30,  tokens: 5,   price: 0,      icon: '🎁', color: 'var(--green)' },
-  monthly: { name: 'ReCars+ Mensual',       days: 30,  tokens: 10,  price: 50000,  icon: '⭐', color: 'var(--accent2)' },
-  annual:  { name: 'ReCars+ Anual',         days: 365, tokens: 150, price: 480000, icon: '🏆', color: 'var(--amber)' }
+  free:    { name: 'Plan Gratis',   price: 0,      commission: FREE_COMMISSION_RATE, icon: '🆓' },
+  monthly: { name: 'ReCars PRO',    price: 50000,  commission: PRO_COMMISSION_RATE,  icon: '⭐' },
+  annual:  { name: 'ReCars PRO Anual', price: 480000, commission: PRO_COMMISSION_RATE, icon: '🏆' }
 };
+
+function getCommissionRate() {
+  var sub = getSubscription();
+  if (sub.plan === 'monthly' || sub.plan === 'annual') return PRO_COMMISSION_RATE;
+  return FREE_COMMISSION_RATE;
+}
+
+function calcCommission(price, rate) {
+  rate = rate || getCommissionRate();
+  var commission = Math.round(price * rate);
+  return { commission: commission, finalPrice: price + commission, rate: rate };
+}
+
+function fmtCommissionLabel(rate) {
+  return (rate * 100).toFixed(1).replace('.0','') + '%';
+}
 var NOTIF_KEY = 'recars_notifications';
 
 // ══ NEWS ══
@@ -1785,6 +1957,7 @@ function navigate(page) {
   if (page === 'requests')    loadRequests();
   if (page === 'profile')     { loadProfile(); loadMyCars(); loadMyRequests(); }
   if (page === 'noticias')    loadNews();
+  if (page === 'operations')  loadMyOperations();
   if (page === 'suscripcion') updateSubUI();
   if (page === 'publish')     resetPublishForm();
 }
@@ -1863,6 +2036,7 @@ function carCardHTML(car, isMine, matchPct) {
     '<div class="car-meta">' + (car.anio || '') + ' · ' + fmtKm(car.km) + ' · ' + esc(car.color || '') + '</div>' +
     locationStr +
     '<div class="car-price">' + fmtPrice(car.precio) + '</div>' +
+  (car.precio && !isMine ? (function(){ var c = calcCommission(car.precio, FREE_COMMISSION_RATE); return '<div style="font-size:0.72rem;color:var(--text3);margin-top:2px">Total c/comisión: <strong>' + fmtPrice(c.finalPrice) + '</strong></div>'; })() : '') +
     precioInfoHTML + actions +
     '</div></div>';
 }
@@ -1955,8 +2129,9 @@ function renderDetailContact(car, isMine) {
       '<div style="font-size:36px;margin-bottom:10px">💬</div>' +
       '<div style="font-size:0.95rem;font-weight:700;margin-bottom:6px">Iniciá la conversación</div>' +
       '<div style="font-size:0.8rem;color:var(--text2);line-height:1.6;margin-bottom:12px">Chateá con la agencia, negociá el precio y consultá sobre financiación BNA. Al cerrar el trato se habilita el contacto directo.</div>' +
-      '<div style="font-size:0.78rem;color:var(--amber);margin-bottom:16px">🪙 Tenés <strong>' + tokens + '</strong> token' + (tokens !== 1 ? 's' : '') + (hasPremium ? ' · <span style="color:var(--green)">Premium activo</span>' : '') + '</div>' +
-      '<button type="button" onclick="openInitChat(\'' + car.id + '\')" style="width:100%;padding:13px;border-radius:var(--radius);background:var(--accent);color:#fff;border:none;cursor:pointer;font-weight:600;font-size:0.9rem;margin-bottom:8px">💬 Iniciar chat con la agencia</button>' +
+      '<div style="font-size:0.78rem;color:var(--amber);margin-bottom:16px">' + (hasPremium ? '<span style="color:var(--green)">Plan PRO activo</span>' : 'Contacto gratuito') + '</div>' +
+      '<button type="button" onclick="startNegotiation(\'' + car.id + '\')" style="width:100%;padding:13px;border-radius:var(--radius);background:var(--accent);color:#fff;border:none;cursor:pointer;font-weight:600;font-size:0.9rem;margin-bottom:8px">🤝 Negociar este vehículo</button>' +
+      '<button type="button" onclick="openInitChat(\'' + car.id + '\')" style="width:100%;padding:10px;border-radius:var(--radius);background:var(--bg);color:var(--text2);border:1px solid var(--border);cursor:pointer;font-weight:500;font-size:0.84rem;margin-bottom:8px">💬 Solo chatear</button>' +
       (hasPremium ? '' : '<button type="button" onclick="closeCarDetail();navigate(\'suscripcion\')" style="width:100%;padding:9px;border-radius:var(--radius);background:transparent;color:var(--text3);border:1px solid var(--card-border);cursor:pointer;font-size:0.78rem">⭐ Premium — chats ilimitados</button>') +
       '</div>';
   }
@@ -2024,9 +2199,7 @@ function loadHomeData() {
     var actOport = document.getElementById('act-oport'); if(actOport) actOport.textContent = oport.length;
     // Tokens
     var sub = getSubscription();
-    var homeTokens = document.getElementById('home-tokens'); if(homeTokens) homeTokens.textContent = sub.tokens || 0;
-    var homeBar = document.getElementById('home-tokens-bar'); if(homeBar) homeBar.style.width = Math.min(100, ((sub.tokens||0)/50)*100) + '%';
-    // Match list
+            // Match list
     loadHomeMatchList();
     // Topbar name
     var topName = document.getElementById('user-topbar-name');
@@ -2276,20 +2449,17 @@ function handleDestacado(checkbox) {
   if (checkbox.checked) {
     checkbox.checked = false;
     var sub = getSubscription();
-    document.getElementById('tokens-count').textContent = sub.tokens || 0;
+    
     document.getElementById('premium-modal').classList.remove('hidden');
   }
 }
 
-function handleUseTokens() {
-  var sub = getSubscription();
-  if ((sub.tokens || 0) <= 0) { toast('Sin tokens. Comprá en Suscripción.', 'error'); return; }
+
   sub.tokens--;
   saveSubscription(sub);
   document.getElementById('premium-modal').classList.add('hidden');
   document.getElementById('pub-destacado').checked = true;
-  toast('✅ Destacado activado. Tokens: ' + sub.tokens, 'success');
-}
+  toast('✅ Destacado activado', 'success');
 
 function handlePremiumSub() {
   document.getElementById('premium-modal').classList.add('hidden');
@@ -2520,19 +2690,17 @@ function openUnlockModal(carId) {
     return;
   }
   var sub = getSubscription();
-  document.getElementById('unlock-tokens-count').textContent = sub.tokens || 0;
+  
   document.getElementById('unlock-modal').classList.remove('hidden');
 }
 function closeUnlockModal() { document.getElementById('unlock-modal').classList.add('hidden'); pendingUnlockCarId = null; }
 function handleUnlockSub() { closeUnlockModal(); navigate('suscripcion'); }
+
 function handleUnlockToken() {
-  var sub = getSubscription();
-  if ((sub.tokens || 0) <= 0) { toast('Sin tokens disponibles', 'error'); return; }
-  sub.tokens--; saveSubscription(sub);
   closeUnlockModal();
   if (pendingUnlockCarId) {
     unlockedContacts[pendingUnlockCarId] = true;
-    toast('✅ Contacto desbloqueado. Tokens: ' + sub.tokens, 'success');
+    toast('✅ Contacto habilitado', 'success');
     if (detailCar && detailCar.id === pendingUnlockCarId) renderDetailContact(detailCar, false);
   }
 }
@@ -2551,9 +2719,11 @@ function updateSubUI() {
   var tokensBig = document.getElementById('sub-tokens-big');
   var countdownBar = document.getElementById('sub-countdown-bar');
   var countdownFill = document.getElementById('sub-countdown-fill');
-  if (tokensBig) tokensBig.textContent = sub.tokens || 0;
-  document.getElementById('tokens-count').textContent = sub.tokens || 0;
-  document.getElementById('unlock-tokens-count').textContent = sub.tokens || 0;
+  // Commission display
+  var commDisp = document.getElementById('sub-commission-display');
+  if (commDisp) commDisp.textContent = fmtCommissionLabel(getCommissionRate());
+  
+  
   if (badge) {
     if (sub.plan === 'free') badge.innerHTML = '<span class="sub-badge free">Plan Gratis</span>';
     else if (active) { var plan = PLANS[sub.plan] || {}; badge.innerHTML = '<span class="sub-badge ' + (sub.plan === 'trial' ? 'trial' : 'premium') + '">' + (plan.icon || '⭐') + ' ' + (plan.name || '') + '</span>'; }
@@ -3689,12 +3859,435 @@ function loadHomeMatchList() {
   });
 }
 
+
+// ════════════════════════════════════════════════════════
+// OPERATIONS SYSTEM — Negociación, Reserva, Comisión
+// ════════════════════════════════════════════════════════
+
+var OPERATIONS_KEY = 'recars_operations';
+var activeOperation = null;
+
+// ── Helpers ──
+function getOperations() {
+  try { return JSON.parse(localStorage.getItem(OPERATIONS_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveOperations(ops) {
+  localStorage.setItem(OPERATIONS_KEY, JSON.stringify(ops));
+}
+function genId() {
+  return 'op_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
+}
+
+// ── Commission display HTML ──
+function commissionBlockHTML(price, rate) {
+  var c = calcCommission(price, rate);
+  return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-size:0.84rem">' +
+    '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">' +
+      '<span style="color:var(--text2)">Precio vendedor</span>' +
+      '<span style="font-weight:600">' + fmtPrice(price) + '</span></div>' +
+    '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">' +
+      '<span style="color:var(--red)">Comisión ReCars (' + fmtCommissionLabel(rate) + ')</span>' +
+      '<span style="font-weight:600;color:var(--red)">+' + fmtPrice(c.commission) + '</span></div>' +
+    '<div style="display:flex;justify-content:space-between;padding:5px 0;font-weight:700;font-size:0.9rem">' +
+      '<span>Total a pagar</span>' +
+      '<span style="color:var(--accent)">' + fmtPrice(c.finalPrice) + '</span></div>' +
+  '</div>';
+}
+
+// ── Start negotiation from car detail ──
+function startNegotiation(carId) {
+  var car = carCache[carId];
+  if (!car) { toast('Error cargando vehículo', 'error'); return; }
+  if (!currentUser) { showAuth(); return; }
+  if (car.owner_id === currentUser.id) { toast('No podés negociar un vehículo propio', 'info'); return; }
+
+  // Check if operation already exists
+  var ops = getOperations();
+  var existing = ops.find(function(o) { return o.car_id === carId && o.buyer_id === currentUser.id && o.status !== 'cancelada' && o.status !== 'completada'; });
+  if (existing) {
+    activeOperation = existing;
+    openNegotiationModal(existing);
+    return;
+  }
+
+  var rate = getCommissionRate();
+  var c = calcCommission(car.precio || 0, rate);
+
+  var op = {
+    id: genId(),
+    car_id: carId,
+    car_name: car.marca + ' ' + car.modelo + ' ' + (car.anio || ''),
+    car_img: (Array.isArray(car.images) && car.images.length) ? car.images[0] : (car.image_url || null),
+    seller_id: car.owner_id,
+    seller_email: car.owner_email || '',
+    buyer_id: currentUser.id,
+    buyer_email: currentUser.email || '',
+    initial_price: car.precio || 0,
+    agreed_price: null,
+    current_offer: car.precio || 0,
+    commission_rate: rate,
+    recars_commission: c.commission,
+    final_price: c.finalPrice,
+    reservation_amount: RESERVATION_AMOUNT,
+    payment_status: 'pendiente',
+    status: 'negociacion',
+    history: [{
+      type: 'system',
+      text: 'Negociación iniciada',
+      price: car.precio || 0,
+      ts: new Date().toISOString()
+    }],
+    messages: [],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+
+  ops.push(op);
+  saveOperations(ops);
+  activeOperation = op;
+  closeCarDetail();
+  openNegotiationModal(op);
+  addNotification('🤝', 'Negociación iniciada', car.marca + ' ' + car.modelo, 'green', null);
+}
+
+// ── Open negotiation modal ──
+function openNegotiationModal(op) {
+  activeOperation = op;
+  var car = carCache[op.car_id] || {};
+  var isBuyer = currentUser && op.buyer_id === currentUser.id;
+  var isSeller = currentUser && op.seller_id === currentUser.id;
+
+  var modal = document.getElementById('negotiation-modal');
+  if (!modal) return;
+
+  // Header
+  var imgHTML = op.car_img ? '<img src="' + op.car_img + '" style="width:100%;height:100%;object-fit:cover">' : '🚗';
+  document.getElementById('neg-car-img').innerHTML = imgHTML;
+  document.getElementById('neg-car-name').textContent = op.car_name;
+  document.getElementById('neg-status-badge').textContent = statusLabel(op.status);
+  document.getElementById('neg-status-badge').className = 'status-badge status-' + op.status;
+
+  // Commission block
+  var rate = op.commission_rate || getCommissionRate();
+  var price = op.agreed_price || op.current_offer || op.initial_price;
+  document.getElementById('neg-commission-block').innerHTML = commissionBlockHTML(price, rate);
+
+  // History
+  renderNegHistory(op);
+
+  // Action area
+  renderNegActions(op, isBuyer, isSeller);
+
+  modal.classList.remove('hidden');
+  modal.style.zIndex = '9200';
+}
+
+function statusLabel(s) {
+  var labels = {
+    'negociacion': '💬 Negociación',
+    'precio_acordado': '✅ Precio acordado',
+    'reserva_pendiente': '⏳ Reserva pendiente',
+    'reserva_pagada': '💚 Reserva pagada',
+    'en_proceso': '🔄 En proceso',
+    'completada': '🎉 Completada',
+    'cancelada': '❌ Cancelada'
+  };
+  return labels[s] || s;
+}
+
+function renderNegHistory(op) {
+  var histEl = document.getElementById('neg-history');
+  if (!histEl) return;
+  var history = op.history || [];
+  var msgs = op.messages || [];
+  var all = history.concat(msgs).sort(function(a,b){ return new Date(a.ts) - new Date(b.ts); });
+
+  histEl.innerHTML = all.map(function(item) {
+    var isMe = currentUser && item.sender_id === currentUser.id;
+    var isSystem = item.type === 'system';
+    var isProposal = item.type === 'proposal';
+    var isAccepted = item.type === 'accepted';
+
+    if (isSystem) {
+      return '<div style="text-align:center;padding:8px 0"><span style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:0.74rem;color:var(--text3)">' + item.text + '</span></div>';
+    }
+    if (isProposal) {
+      var c2 = calcCommission(item.price, op.commission_rate);
+      return '<div style="margin:8px 0"><div style="background:' + (isMe ? 'var(--accent-light)' : 'var(--bg)') + ';border:1px solid var(--border);border-radius:var(--radius);padding:14px;max-width:85%;' + (isMe?'margin-left:auto':'') + '">' +
+        '<div style="font-size:0.72rem;font-weight:600;color:var(--text3);margin-bottom:8px">' + (isMe?'Tu propuesta':'Propuesta de la agencia') + ' · ' + new Date(item.ts).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}) + '</div>' +
+        commissionBlockHTML(item.price, op.commission_rate) +
+        (item.note ? '<div style="font-size:0.8rem;color:var(--text2);margin-top:8px;font-style:italic">"' + esc(item.note) + '"</div>' : '') +
+        '</div></div>';
+    }
+    if (isAccepted) {
+      return '<div style="text-align:center;padding:12px"><div style="display:inline-block;background:var(--green-light);border:2px solid var(--green);border-radius:var(--radius);padding:12px 24px"><div style="color:var(--green);font-weight:700;font-size:0.95rem">✅ Precio acordado</div><div style="font-size:0.82rem;color:var(--text2);margin-top:4px">' + fmtPrice(item.price) + ' + ' + fmtPrice(item.commission) + ' comisión = ' + fmtPrice(item.finalPrice) + '</div></div></div>';
+    }
+    // Regular message
+    return '<div style="display:flex;flex-direction:column;' + (isMe?'align-items:flex-end':'align-items:flex-start') + ';margin:6px 0">' +
+      '<div style="background:' + (isMe?'var(--accent)':'#fff') + ';color:' + (isMe?'#fff':'var(--text)') + ';border:1px solid var(--border);border-radius:12px;padding:10px 14px;max-width:75%;font-size:0.85rem">' + esc(item.text) + '</div>' +
+      '<div style="font-size:0.65rem;color:var(--text3);margin-top:3px">' + new Date(item.ts).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}) + '</div></div>';
+  }).join('');
+  setTimeout(function(){ histEl.scrollTop = histEl.scrollHeight; }, 80);
+}
+
+function renderNegActions(op, isBuyer, isSeller) {
+  var actEl = document.getElementById('neg-actions');
+  if (!actEl) return;
+
+  if (op.status === 'negociacion') {
+    var lastProposal = (op.history || []).filter(function(h){ return h.type==='proposal'; });
+    var lastP = lastProposal.length ? lastProposal[lastProposal.length-1] : null;
+    var canAccept = lastP && lastP.sender_id !== (currentUser && currentUser.id);
+
+    actEl.innerHTML =
+      '<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">' +
+        (canAccept ? '<button type="button" class="btn-sm primary" onclick="acceptProposal()" style="flex:1;padding:10px">✅ Aceptar propuesta</button>' : '') +
+        '<button type="button" class="btn-sm" onclick="showMakeProposal()" style="flex:1;padding:10px">💰 Hacer propuesta</button>' +
+      '</div>' +
+      '<div id="make-proposal-form" style="display:none;background:var(--bg);border-radius:var(--radius);padding:14px;margin-bottom:10px">' +
+        '<div style="font-size:0.78rem;color:var(--text2);margin-bottom:8px">Tu propuesta de precio (lo que recibe el vendedor):</div>' +
+        '<div style="display:flex;gap:8px;margin-bottom:8px">' +
+          '<input type="number" id="proposal-price" class="form-input" placeholder="Ej: 18500000" style="flex:1" oninput="previewProposal()">' +
+        '</div>' +
+        '<div id="proposal-preview" style="margin-bottom:10px"></div>' +
+        '<input type="text" id="proposal-note" class="form-input" placeholder="Nota opcional..." style="margin-bottom:8px">' +
+        '<button type="button" class="btn-sm primary" onclick="sendProposal()" style="width:100%">Enviar propuesta</button>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px">' +
+        '<input type="text" id="neg-msg-input" class="chat-input" placeholder="Mensaje..." style="flex:1">' +
+        '<button type="button" class="chat-send-btn" onclick="sendNegMessage()">Enviar</button>' +
+      '</div>';
+
+  } else if (op.status === 'precio_acordado') {
+    actEl.innerHTML =
+      '<div style="background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius);padding:16px;margin-bottom:12px;text-align:center">' +
+        '<div style="font-weight:700;color:var(--green);margin-bottom:4px">✅ Precio acordado</div>' +
+        '<div style="font-size:0.82rem;color:var(--text2)">Reservá el vehículo para continuar</div>' +
+      '</div>' +
+      (isBuyer ? '<button type="button" class="form-submit" onclick="showReservationModal()" style="width:100%">📋 Reservar vehículo</button>' : '<div style="text-align:center;color:var(--text3);font-size:0.84rem">Esperando que el comprador realice la reserva</div>');
+
+  } else if (op.status === 'reserva_pendiente') {
+    actEl.innerHTML =
+      '<div style="background:var(--amber-light);border:1px solid var(--amber);border-radius:var(--radius);padding:16px;text-align:center">' +
+        '<div style="font-weight:700;color:var(--amber);margin-bottom:4px">⏳ Reserva pendiente de pago</div>' +
+        '<div style="font-size:0.82rem;color:var(--text2);margin-bottom:12px">Pagá la seña para confirmar el vehículo</div>' +
+        (isBuyer ? '<button type="button" class="form-submit" onclick="showReservationModal()" style="width:100%">💳 Pagar reserva</button>' : '<div style="color:var(--text3);font-size:0.84rem">El comprador debe pagar la reserva</div>') +
+      '</div>';
+
+  } else if (op.status === 'reserva_pagada') {
+    actEl.innerHTML =
+      '<div style="background:var(--green-light);border:2px solid var(--green);border-radius:var(--radius);padding:16px;text-align:center">' +
+        '<div style="font-size:1.2rem;margin-bottom:8px">🎉</div>' +
+        '<div style="font-weight:700;color:var(--green);margin-bottom:4px">¡Reserva confirmada!</div>' +
+        '<div style="font-size:0.82rem;color:var(--text2)">El vehículo está reservado. Coordiná la entrega con la agencia.</div>' +
+      '</div>';
+  }
+}
+
+function showMakeProposal() {
+  var form = document.getElementById('make-proposal-form');
+  if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+function previewProposal() {
+  var price = parseFloat(document.getElementById('proposal-price').value) || 0;
+  var prev = document.getElementById('proposal-preview');
+  if (!prev) return;
+  if (price > 0 && activeOperation) {
+    prev.innerHTML = commissionBlockHTML(price, activeOperation.commission_rate || getCommissionRate());
+  } else {
+    prev.innerHTML = '';
+  }
+}
+
+function sendProposal() {
+  var price = parseFloat(document.getElementById('proposal-price').value) || 0;
+  var note = document.getElementById('proposal-note').value.trim();
+  if (!price || price <= 0) { toast('Ingresá un precio válido', 'error'); return; }
+  if (!activeOperation) return;
+  var c = calcCommission(price, activeOperation.commission_rate);
+  var proposal = {
+    type: 'proposal',
+    sender_id: currentUser.id,
+    price: price,
+    commission: c.commission,
+    finalPrice: c.finalPrice,
+    note: note,
+    ts: new Date().toISOString()
+  };
+  activeOperation.history = activeOperation.history || [];
+  activeOperation.history.push(proposal);
+  activeOperation.current_offer = price;
+  activeOperation.recars_commission = c.commission;
+  activeOperation.final_price = c.finalPrice;
+  activeOperation.updated_at = new Date().toISOString();
+  updateOperation(activeOperation);
+  document.getElementById('proposal-price').value = '';
+  document.getElementById('proposal-note').value = '';
+  document.getElementById('make-proposal-form').style.display = 'none';
+  openNegotiationModal(activeOperation);
+  toast('Propuesta enviada', 'success');
+}
+
+function acceptProposal() {
+  if (!activeOperation) return;
+  var lastP = (activeOperation.history||[]).filter(function(h){return h.type==='proposal';});
+  var last = lastP.length ? lastP[lastP.length-1] : null;
+  if (!last) return;
+  var c = calcCommission(last.price, activeOperation.commission_rate);
+  activeOperation.agreed_price = last.price;
+  activeOperation.recars_commission = c.commission;
+  activeOperation.final_price = c.finalPrice;
+  activeOperation.status = 'precio_acordado';
+  activeOperation.history.push({
+    type: 'accepted',
+    price: last.price,
+    commission: c.commission,
+    finalPrice: c.finalPrice,
+    ts: new Date().toISOString()
+  });
+  activeOperation.updated_at = new Date().toISOString();
+  updateOperation(activeOperation);
+  openNegotiationModal(activeOperation);
+  toast('✅ ¡Precio acordado! Podés proceder con la reserva.', 'success');
+  addNotification('✅', 'Precio acordado', activeOperation.car_name + ' — ' + fmtPrice(last.price), 'green', null);
+}
+
+function sendNegMessage() {
+  var input = document.getElementById('neg-msg-input');
+  var text = (input ? input.value : '').trim();
+  if (!text || !activeOperation) return;
+  input.value = '';
+  activeOperation.messages = activeOperation.messages || [];
+  activeOperation.messages.push({
+    type: 'message',
+    sender_id: currentUser.id,
+    text: text,
+    ts: new Date().toISOString()
+  });
+  activeOperation.updated_at = new Date().toISOString();
+  updateOperation(activeOperation);
+  openNegotiationModal(activeOperation);
+}
+
+function updateOperation(op) {
+  var ops = getOperations();
+  var idx = ops.findIndex(function(o){ return o.id === op.id; });
+  if (idx >= 0) ops[idx] = op; else ops.push(op);
+  saveOperations(ops);
+}
+
+// ── RESERVATION ──
+function showReservationModal() {
+  if (!activeOperation) return;
+  var op = activeOperation;
+  var price = op.agreed_price || op.current_offer || op.initial_price;
+  var c = calcCommission(price, op.commission_rate);
+  var saldo = c.finalPrice - op.reservation_amount;
+
+  var el = document.getElementById('reservation-modal');
+  if (!el) return;
+
+  document.getElementById('res-car-name').textContent = op.car_name;
+  document.getElementById('res-summary').innerHTML =
+    commissionBlockHTML(price, op.commission_rate) +
+    '<div style="background:var(--accent-light);border:1px solid var(--accent-light2);border-radius:var(--radius);padding:14px;margin-top:12px;font-size:0.84rem">' +
+      '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">' +
+        '<span style="color:var(--text2)">Seña / Reserva</span>' +
+        '<span style="font-weight:700;color:var(--accent)">-' + fmtPrice(op.reservation_amount) + '</span></div>' +
+      '<div style="display:flex;justify-content:space-between;padding:4px 0;font-weight:700">' +
+        '<span>Saldo a pagar al retirar</span>' +
+        '<span>' + fmtPrice(saldo) + '</span></div>' +
+    '</div>';
+
+  // CBU/transfer info for ReCars commission
+  document.getElementById('res-recars-info').innerHTML =
+    '<div style="background:var(--amber-light);border:1px solid #fde68a;border-radius:var(--radius);padding:14px;font-size:0.82rem">' +
+      '<div style="font-weight:600;color:var(--amber);margin-bottom:8px">💳 Pago de seña + comisión ReCars</div>' +
+      '<div style="color:var(--text2);margin-bottom:10px">Transferí <strong>' + fmtPrice(op.reservation_amount) + '</strong> a ReCars como seña. La comisión de <strong>' + fmtPrice(c.commission) + '</strong> se descuenta del saldo final.</div>' +
+      '<div style="background:#fff;border-radius:8px;padding:12px;font-family:monospace;font-size:0.82rem">' +
+        '<div style="margin-bottom:6px"><span style="color:var(--text3)">CBU:</span> <strong>' + RECARS_CBU + '</strong></div>' +
+        '<div style="margin-bottom:6px"><span style="color:var(--text3)">Alias:</span> <strong>' + RECARS_ALIAS + '</strong></div>' +
+        '<div><span style="color:var(--text3)">Titular:</span> <strong>' + RECARS_TITULAR + '</strong></div>' +
+      '</div>' +
+      '<div style="margin-top:10px;font-size:0.75rem;color:var(--text3)">Una vez confirmado el pago, el vehículo queda reservado a tu nombre.</div>' +
+    '</div>';
+
+  document.getElementById('res-op-ref').textContent = op.id;
+  el.classList.remove('hidden');
+  el.style.zIndex = '9300';
+}
+
+function confirmReservationPaid() {
+  if (!activeOperation) return;
+  activeOperation.status = 'reserva_pagada';
+  activeOperation.payment_status = 'pagada_manual';
+  activeOperation.paid_at = new Date().toISOString();
+  activeOperation.history = activeOperation.history || [];
+  activeOperation.history.push({
+    type: 'system',
+    text: 'Reserva marcada como pagada (transferencia)',
+    ts: new Date().toISOString()
+  });
+  activeOperation.updated_at = new Date().toISOString();
+  updateOperation(activeOperation);
+  document.getElementById('reservation-modal').classList.add('hidden');
+  openNegotiationModal(activeOperation);
+  toast('🎉 ¡Reserva confirmada! El vehículo está a tu nombre.', 'success');
+  addNotification('🎉', 'Reserva confirmada', activeOperation.car_name, 'green', null);
+}
+
+function closeNegotiationModal() {
+  document.getElementById('negotiation-modal').classList.add('hidden');
+  activeOperation = null;
+}
+
+// ── MY OPERATIONS ──
+function loadMyOperations() {
+  var ops = getOperations();
+  var myOps = ops.filter(function(o) {
+    return currentUser && (o.buyer_id === currentUser.id || o.seller_id === currentUser.id);
+  });
+  var el = document.getElementById('my-operations-list');
+  if (!el) return;
+  if (!myOps.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Sin operaciones aún</div><div class="empty-sub">Negociá un vehículo para ver tus operaciones</div></div>';
+    return;
+  }
+  myOps.sort(function(a,b){ return new Date(b.updated_at) - new Date(a.updated_at); });
+  el.innerHTML = myOps.map(function(op) {
+    var isBuyer = currentUser && op.buyer_id === currentUser.id;
+    var price = op.agreed_price || op.current_offer || op.initial_price;
+    var c = calcCommission(price, op.commission_rate);
+    return '<div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;cursor:pointer;box-shadow:var(--shadow)" data-oid="' + op.id + '" onclick="reopenOperation(this.dataset.oid)">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;gap:8px">' +
+        '<div><div style="font-weight:600;font-size:0.95rem;color:var(--text)">' + esc(op.car_name) + '</div>' +
+        '<div style="font-size:0.78rem;color:var(--text3);margin-top:3px">' + (isBuyer ? 'Comprando' : 'Vendiendo') + ' · ' + new Date(op.created_at).toLocaleDateString('es-AR') + '</div></div>' +
+        '<span class="status-badge status-' + op.status + '">' + statusLabel(op.status) + '</span>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:0.8rem">' +
+        '<div><div style="color:var(--text3);margin-bottom:2px">Precio acordado</div><div style="font-weight:600">' + (op.agreed_price ? fmtPrice(op.agreed_price) : '—') + '</div></div>' +
+        '<div><div style="color:var(--red);margin-bottom:2px">Comisión ReCars</div><div style="font-weight:600;color:var(--red)">' + fmtPrice(c.commission) + '</div></div>' +
+        '<div><div style="color:var(--text3);margin-bottom:2px">Total</div><div style="font-weight:700;color:var(--accent)">' + fmtPrice(c.finalPrice) + '</div></div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function reopenOperation(opId) {
+  var ops = getOperations();
+  var op = ops.find(function(o){ return o.id === opId; });
+  if (!op) return;
+  activeOperation = op;
+  openNegotiationModal(op);
+}
+
 // ══ ESC + TOUCH ══
 document.addEventListener('keydown', function(e) {
   if (e.key !== 'Escape') return;
   closeMatchModal(); closeGallery(); closeCarDetail(); closeEditCar(); closeEditReq();
   closeUnlockModal(); closeForgotPassword(); closePayment(); closeNotifications();
-  ['premium-modal','credit-modal','news-preview-modal','comparator-modal','rating-modal','alerts-modal'].forEach(function(id) { var el = document.getElementById(id); if (el) el.classList.add('hidden'); });
+  ['premium-modal','credit-modal','news-preview-modal','comparator-modal','rating-modal','alerts-modal','negotiation-modal','reservation-modal'].forEach(function(id) { var el = document.getElementById(id); if (el) el.classList.add('hidden'); });
 });
 
 var gOverlay = document.getElementById('gallery-overlay');
