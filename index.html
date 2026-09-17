@@ -617,6 +617,9 @@ button,a,.nav-item,.bn-item,.car-card,.plan-card,.pay-method,.quick-action{touch
 .status-en_proceso{background:var(--accent-light);color:var(--accent);border:1px solid var(--accent-light2)}
 .status-completada{background:var(--green-light);color:var(--green);border:1px solid #a7f3d0}
 .status-cancelada{background:var(--red-light);color:var(--red);border:1px solid #fecaca}
+
+.chat-list-item{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:var(--transition)}
+.chat-list-item:hover,.chat-list-item.active{background:var(--accent-light)}
 </style>
 </head>
 <body>
@@ -1102,6 +1105,7 @@ button,a,.nav-item,.bn-item,.car-card,.plan-card,.pay-method,.quick-action{touch
       <div class="nav-item" onclick="navigate('noticias')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/></svg><span class="nav-label">Noticias</span></div>
       <div class="nav-section-label">Mi cuenta</div>
       <div class="nav-item" onclick="navigate('suscripcion')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="nav-label">Suscripción</span></div>
+      <div class="nav-item" id="nav-messages" onclick="navigate('messages')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span class="nav-label">Mensajes</span></div>
       <div class="nav-item" onclick="navigate('operations')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span class="nav-label">Mis operaciones</span></div>
       <div class="nav-item" onclick="openAlerts()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="nav-label">Mis alertas</span></div>
       <div class="nav-item" onclick="navigate('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nav-label">Mi Agencia</span></div>
@@ -1508,7 +1512,9 @@ button,a,.nav-item,.bn-item,.car-card,.plan-card,.pay-method,.quick-action{touch
         </div>
       </div>
     </div>
-  </div><!-- /main -->
+  
+    <div class="page" id="page-messages"><div class="page-header-row"><div><div class="page-title">Mensajes</div><div class="page-subtitle">Conversaciones en tiempo real</div></div></div><div style="display:grid;grid-template-columns:290px 1fr;gap:0;background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;min-height:560px;box-shadow:var(--shadow)"><div style="border-right:1px solid var(--border);display:flex;flex-direction:column"><div style="padding:14px 16px;border-bottom:1px solid var(--border);font-weight:600;font-size:0.88rem;color:var(--text);flex-shrink:0">Conversaciones</div><div id="chat-list" style="overflow-y:auto;flex:1"></div></div><div style="display:flex;flex-direction:column"><div id="active-chat-header" style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;min-height:66px"><div style="font-size:0.88rem;color:var(--text3)">Selecciona una conversacion</div></div><div id="active-chat-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--bg)"></div><div id="active-chat-input-wrap" style="display:none;padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0"><input type="text" id="active-chat-input" class="form-input" placeholder="Escribi un mensaje..." style="flex:1"><button type="button" class="form-submit" onclick="sendActiveMessage()" style="padding:10px 18px">Enviar</button></div></div></div></div>
+</div><!-- /main -->
 
   <!-- BOTTOM NAV -->
   <nav id="bottom-nav">
@@ -1516,11 +1522,214 @@ button,a,.nav-item,.bn-item,.car-card,.plan-card,.pay-method,.quick-action{touch
     <div class="bn-item" onclick="navigate('vehicles')" id="bn-vehicles"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Autos</div>
     <div class="bn-item" onclick="navigate('publish')" id="bn-publish"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Publicar</div>
     <div class="bn-item" onclick="navigate('requests')" id="bn-requests"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Clientes</div>
+    <div class="bn-item" onclick="navigate('messages')" id="bn-messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Chat</div>
     <div class="bn-item" onclick="navigate('profile')" id="bn-profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Agencia</div>
   </nav>
 </div><!-- /app -->
 
 <script>
+// === REAL CHAT VIA SUPABASE ===
+var activeMsgCarId = null;
+var activeMsgBuyerId = null;
+var msgPollInterval = null;
+var currentChatCarId = null;
+
+function openCarChat(carId) {
+  if (!currentUser) { showAuth(); return; }
+  currentChatCarId = carId;
+  var car = carCache[carId];
+  if (!car) {
+    getSB().from('cars').select('*').eq('id', carId).then(function(r) {
+      if (r.data && r.data[0]) { carCache[carId] = r.data[0]; openCarChat(carId); }
+    });
+    return;
+  }
+  if (car.owner_id === currentUser.id) { toast('Es tu propio vehiculo', 'info'); return; }
+  getSB().from('messages').select('id').eq('car_id', carId)
+    .or('from_user.eq.' + currentUser.id + ',to_user.eq.' + currentUser.id)
+    .then(function(r) {
+      if (!(r.data && r.data.length)) {
+        getSB().from('messages').insert({
+          from_user: currentUser.id, to_user: currentUser.id,
+          car_id: carId,
+          message: '[BOT] Hola! Soy el asistente ReCars. Consultame sobre el ' +
+            (car.marca||'') + ' ' + (car.modelo||'') +
+            ': precio, financiacion BNA, papeles, permuta o formas de pago.'
+        }).then(function() {
+          navigate('messages');
+          setTimeout(function() { loadMessagesPage(); openMsgChat(carId, currentUser.id); }, 400);
+        });
+      } else {
+        navigate('messages');
+        setTimeout(function() { loadMessagesPage(); openMsgChat(carId, currentUser.id); }, 400);
+      }
+    });
+}
+
+function openCarSellerChats(carId) {
+  navigate('messages');
+  setTimeout(function() {
+    loadMessagesPage();
+    getSB().from('messages').select('*').eq('car_id', carId).then(function(r) {
+      var buyers = {};
+      (r.data||[]).forEach(function(m) {
+        var b = m.from_user === currentUser.id ? m.to_user : m.from_user;
+        if (b !== currentUser.id) buyers[b] = true;
+      });
+      var ids = Object.keys(buyers);
+      if (ids.length) openMsgChat(carId, ids[0]);
+    });
+  }, 400);
+}
+
+function openMsgChat(carId, buyerId) {
+  activeMsgCarId = carId;
+  activeMsgBuyerId = buyerId;
+  if (msgPollInterval) clearInterval(msgPollInterval);
+  getSB().from('cars').select('*').eq('id', carId).then(function(r) {
+    var car = (r.data && r.data[0]) || {};
+    carCache[carId] = car;
+    var isSeller = car.owner_id === currentUser.id;
+    var imgs = Array.isArray(car.images)&&car.images.length ? car.images : (car.image_url?[car.image_url]:[]);
+    var hdr = document.getElementById('active-chat-header');
+    if (hdr) {
+      hdr.innerHTML =
+        (imgs.length ? '<img src="' + imgs[0] + '" style="width:44px;height:36px;border-radius:7px;object-fit:cover">' :
+          '<div style="width:44px;height:36px;border-radius:7px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:20px">&#128663;</div>') +
+        '<div style="flex:1"><div style="font-weight:600;font-size:0.9rem">' +
+          esc((car.marca||'') + ' ' + (car.modelo||'') + ' ' + (car.anio||'')) +
+        '</div><div style="font-size:0.72rem;color:var(--text3)">' +
+          (isSeller ? 'Consulta de comprador' : 'Tu consulta') +
+        '</div></div>' +
+        '<strong style="color:var(--accent)">' + fmtPrice(car.precio) + '</strong>';
+    }
+    _loadAndRenderMsgs(carId, buyerId);
+    msgPollInterval = setInterval(function() {
+      if (activeMsgCarId === carId) _loadAndRenderMsgs(carId, buyerId);
+    }, 3000);
+    var wrap = document.getElementById('active-chat-input-wrap');
+    if (wrap) wrap.style.display = 'flex';
+    document.querySelectorAll('.chat-list-item').forEach(function(el) { el.classList.remove('active'); });
+    var sel = document.querySelector('.chat-list-item[data-carid="' + carId + '"][data-buyerid="' + buyerId + '"]');
+    if (sel) sel.classList.add('active');
+  });
+}
+
+function _loadAndRenderMsgs(carId, buyerId) {
+  getSB().from('messages').select('*').eq('car_id', carId)
+    .or('from_user.eq.' + buyerId + ',to_user.eq.' + buyerId)
+    .order('created_at', { ascending: true })
+    .then(function(r) { _renderMsgs(r.data || []); });
+}
+
+function _renderMsgs(msgs) {
+  var el = document.getElementById('active-chat-messages');
+  if (!el) return;
+  if (!msgs.length) {
+    el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text3);font-size:0.84rem">Sin mensajes aun.</div>';
+    return;
+  }
+  var wasAtBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 40;
+  el.innerHTML = msgs.map(function(m) {
+    var isMe = m.from_user === currentUser.id;
+    var isBot = (m.message||'').indexOf('[BOT] ') === 0;
+    var text = (m.message||'').replace('[BOT] ', '');
+    var time = m.created_at ? new Date(m.created_at).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}) : '';
+    if (isBot) return '<div style="align-self:flex-start;max-width:82%">' +
+      '<div style="font-size:0.65rem;color:var(--accent);font-weight:600;margin-bottom:3px">Asistente ReCars</div>' +
+      '<div style="background:#fff;border:1px solid var(--border);border-radius:12px 12px 12px 4px;padding:10px 14px;font-size:0.84rem;color:var(--text2)">' + text + '</div>' +
+      '<div style="font-size:0.65rem;color:var(--text3);margin-top:3px">' + time + '</div></div>';
+    return '<div style="display:flex;flex-direction:column;' + (isMe?'align-items:flex-end;align-self:flex-end':'align-items:flex-start;align-self:flex-start') + ';max-width:78%">' +
+      '<div style="background:' + (isMe?'var(--accent)':'#fff') + ';color:' + (isMe?'#fff':'var(--text)') + ';border:1px solid var(--border);border-radius:' + (isMe?'12px 12px 4px 12px':'12px 12px 12px 4px') + ';padding:10px 14px;font-size:0.85rem">' + esc(text) + '</div>' +
+      '<div style="font-size:0.65rem;color:var(--text3);margin-top:3px">' + time + '</div></div>';
+  }).join('');
+  if (wasAtBottom) el.scrollTop = el.scrollHeight;
+}
+
+function sendActiveMessage() {
+  var input = document.getElementById('active-chat-input');
+  var text = (input ? input.value : '').trim();
+  if (!text || !activeMsgCarId || !activeMsgBuyerId) return;
+  input.value = '';
+  var car = carCache[activeMsgCarId] || {};
+  var isSeller = car.owner_id === currentUser.id;
+  var toUser = isSeller ? activeMsgBuyerId : (car.owner_id || activeMsgBuyerId);
+  getSB().from('messages').insert({
+    from_user: currentUser.id, to_user: toUser,
+    car_id: activeMsgCarId, message: text
+  }).then(function() {
+    _loadAndRenderMsgs(activeMsgCarId, activeMsgBuyerId);
+    if (!isSeller) {
+      setTimeout(function() {
+        var responses = getBotResponse(text, car);
+        var resp = Array.isArray(responses) ? responses[Math.floor(Math.random()*responses.length)] : responses;
+        getSB().from('messages').insert({
+          from_user: currentUser.id, to_user: currentUser.id,
+          car_id: activeMsgCarId,
+          message: '[BOT] ' + resp.replace(/<[^>]+>/g,'')
+        }).then(function() { _loadAndRenderMsgs(activeMsgCarId, activeMsgBuyerId); });
+      }, 1500 + Math.random()*800);
+    }
+  });
+}
+
+function loadMessagesPage() {
+  if (!currentUser) return;
+  var listEl = document.getElementById('chat-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3);font-size:0.82rem">Cargando...</div>';
+  getSB().from('messages').select('*')
+    .or('from_user.eq.' + currentUser.id + ',to_user.eq.' + currentUser.id)
+    .order('created_at', { ascending: false })
+    .then(function(r) {
+      var msgs = r.data || [];
+      var convMap = {};
+      msgs.forEach(function(m) {
+        var buyerId = m.from_user === currentUser.id ? m.to_user : m.from_user;
+        var key = (m.car_id||'') + '|' + buyerId;
+        if (!convMap[key]) convMap[key] = { carId: m.car_id, buyerId: buyerId, lastMsg: m.message, ts: m.created_at };
+      });
+      var convs = Object.values(convMap);
+      if (!convs.length) {
+        listEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:0.84rem">Sin conversaciones aun.<br><br>Abri un auto y toca <strong>Chatear con la agencia</strong>.</div>';
+        return;
+      }
+      getSB().from('cars').select('id,marca,modelo,anio,images,image_url,owner_id,precio').then(function(r2) {
+        var carMap = {};
+        (r2.data||[]).forEach(function(car) { carMap[car.id] = car; carCache[car.id] = car; });
+        listEl.innerHTML = convs.map(function(cv) {
+          var car = carMap[cv.carId] || {};
+          var isBuyer = car.owner_id !== currentUser.id;
+          var imgs = Array.isArray(car.images)&&car.images.length ? car.images : (car.image_url?[car.image_url]:[]);
+          var thumb = imgs.length ? '<img src="' + imgs[0] + '" style="width:100%;height:100%;object-fit:cover">' : '&#128663;';
+          var title = (car.marca||'Auto') + ' ' + (car.modelo||'') + (car.anio?' '+car.anio:'');
+          var lastText = (cv.lastMsg||'').replace('[BOT] ','').substring(0,38);
+          var time = cv.ts ? new Date(cv.ts).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}) : '';
+          var isActive = cv.carId===activeMsgCarId && cv.buyerId===activeMsgBuyerId;
+          return '<div class="chat-list-item' + (isActive?' active':'') + '" ' +
+            'data-carid="' + (cv.carId||'') + '" data-buyerid="' + (cv.buyerId||'') + '" ' +
+            'onclick="openMsgChat(this.dataset.carid,this.dataset.buyerid)">' +
+            '<div style="width:44px;height:36px;border-radius:8px;overflow:hidden;background:var(--bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px">' + thumb + '</div>' +
+            '<div style="flex:1;min-width:0">' +
+              '<div style="font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(title) + '</div>' +
+              '<div style="font-size:0.7rem;color:var(--text3)">' + (isBuyer?'Comprando':'Vendiendo') + '</div>' +
+              '<div style="font-size:0.74rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(lastText) + '</div>' +
+            '</div>' +
+            '<div style="font-size:0.65rem;color:var(--text3);flex-shrink:0">' + time + '</div>' +
+          '</div>';
+        }).join('');
+      });
+    });
+}
+
+function stopSubscription() { if (msgPollInterval) { clearInterval(msgPollInterval); msgPollInterval = null; } }
+
+document.addEventListener('DOMContentLoaded', function() {
+  var inp = document.getElementById('active-chat-input');
+  if (inp) inp.addEventListener('keypress', function(e) { if (e.key==='Enter') sendActiveMessage(); });
+});
+
+
 
 // iOS Safari: detect file:// and warn
 if (window.location.protocol === 'file:') {
@@ -1957,6 +2166,8 @@ function navigate(page) {
   if (page === 'requests')    loadRequests();
   if (page === 'profile')     { loadProfile(); loadMyCars(); loadMyRequests(); }
   if (page === 'noticias')    loadNews();
+  if (page === 'messages') { stopSubscription(); loadMessagesPage(); }
+  if (page === 'operations')  loadMyOperations();
   if (page === 'operations')  loadMyOperations();
   if (page === 'suscripcion') updateSubUI();
   if (page === 'publish')     resetPublishForm();
@@ -2096,7 +2307,6 @@ function renderDetailContact(car, isMine) {
   var hasPremium = isSubActive() && sub.plan !== 'trial';
   var chatStarted = !!(chatSessions && chatSessions[car.id]);
   var contactUnlocked = !!unlockedContacts[car.id];
-  var tokens = sub.tokens || 0;
 
   if (contactUnlocked) {
     // Trato cerrado - mostrar contacto completo
@@ -2131,7 +2341,7 @@ function renderDetailContact(car, isMine) {
       '<div style="font-size:0.8rem;color:var(--text2);line-height:1.6;margin-bottom:12px">Chateá con la agencia, negociá el precio y consultá sobre financiación BNA. Al cerrar el trato se habilita el contacto directo.</div>' +
       '<div style="font-size:0.78rem;color:var(--amber);margin-bottom:16px">' + (hasPremium ? '<span style="color:var(--green)">Plan PRO activo</span>' : 'Contacto gratuito') + '</div>' +
       '<button type="button" onclick="startNegotiation(\'' + car.id + '\')" style="width:100%;padding:13px;border-radius:var(--radius);background:var(--accent);color:#fff;border:none;cursor:pointer;font-weight:600;font-size:0.9rem;margin-bottom:8px">🤝 Negociar este vehículo</button>' +
-      '<button type="button" onclick="openInitChat(\'' + car.id + '\')" style="width:100%;padding:10px;border-radius:var(--radius);background:var(--bg);color:var(--text2);border:1px solid var(--border);cursor:pointer;font-weight:500;font-size:0.84rem;margin-bottom:8px">💬 Solo chatear</button>' +
+      '<button type="button" onclick="openCarChat(\'' + car.id + '\')" style="width:100%;padding:10px;border-radius:var(--radius);background:var(--bg);color:var(--text2);border:1px solid var(--border);cursor:pointer;font-weight:500;font-size:0.84rem;margin-bottom:8px">💬 Solo chatear</button>' +
       (hasPremium ? '' : '<button type="button" onclick="closeCarDetail();navigate(\'suscripcion\')" style="width:100%;padding:9px;border-radius:var(--radius);background:transparent;color:var(--text3);border:1px solid var(--card-border);cursor:pointer;font-size:0.78rem">⭐ Premium — chats ilimitados</button>') +
       '</div>';
   }
@@ -2197,7 +2407,6 @@ function loadHomeData() {
     var actCars = document.getElementById('act-cars'); if(actCars) actCars.textContent = mine.length;
     var actReqs = document.getElementById('act-requests'); if(actReqs) actReqs.textContent = reqs.length;
     var actOport = document.getElementById('act-oport'); if(actOport) actOport.textContent = oport.length;
-    // Tokens
     var sub = getSubscription();
             // Match list
     loadHomeMatchList();
@@ -2455,15 +2664,10 @@ function handleDestacado(checkbox) {
 }
 
 
-  sub.tokens--;
-  saveSubscription(sub);
+function handleUseTokens() {
   document.getElementById('premium-modal').classList.add('hidden');
   document.getElementById('pub-destacado').checked = true;
   toast('✅ Destacado activado', 'success');
-
-function handlePremiumSub() {
-  document.getElementById('premium-modal').classList.add('hidden');
-  navigate('suscripcion');
 }
 
 function uploadPhotoToStorage(blob, carId, idx) {
@@ -2481,10 +2685,9 @@ function uploadPhotoToStorage(blob, carId, idx) {
 }
 
 function publishCar() {
-  if (!currentUser) {
-    toast('Sesión expirada. Por favor ingresá de nuevo.', 'error');
-    showAuth();
-    return;
+  if (!currentUser) { showAuth(); return; }
+  if (_session && _session.expires_at && Math.floor(Date.now()/1000) >= _session.expires_at - 120) {
+    getSB().auth.getSession().then(function(res) { if (res.data && res.data.session) { _session = res.data.session; currentUser = _session.user; } });
   }
   var marca = document.getElementById('pub-marca').value.trim();
   var modelo = document.getElementById('pub-modelo').value.trim();
@@ -2706,7 +2909,7 @@ function handleUnlockToken() {
 }
 
 // ══ SUBSCRIPTION ══
-function getSubscription() { try { var r = localStorage.getItem(SUB_KEY); return r ? JSON.parse(r) : { plan: 'free', expiry: null, tokens: 0 }; } catch(e) { return { plan: 'free', expiry: null, tokens: 0 }; } }
+function getSubscription() { try { var r = localStorage.getItem(SUB_KEY); return r ? JSON.parse(r) : { plan: 'free', expiry: null }; } catch(e) { return { plan: 'free', expiry: null }; } }
 function saveSubscription(sub) { localStorage.setItem(SUB_KEY, JSON.stringify(sub)); updateSubUI(); }
 function isSubActive() { var sub = getSubscription(); if (sub.plan === 'free' || !sub.expiry) return false; return new Date(sub.expiry) > new Date(); }
 
@@ -2716,7 +2919,6 @@ function updateSubUI() {
   var badge = document.getElementById('top-sub-badge');
   var statusLabel = document.getElementById('sub-status-label');
   var expiryLabel = document.getElementById('sub-expiry-label');
-  var tokensBig = document.getElementById('sub-tokens-big');
   var countdownBar = document.getElementById('sub-countdown-bar');
   var countdownFill = document.getElementById('sub-countdown-fill');
   // Commission display
@@ -2784,9 +2986,8 @@ function confirmPayment() {
   if (plan.days > 0) {
     var expiry = new Date(Date.now() + plan.days * 86400000);
     sub.plan = currentPayPlan; sub.expiry = expiry.toISOString();
-    sub.tokens = (sub.tokens || 0) + plan.tokens;
     sub.activatedAt = new Date().toISOString();
-  } else { sub.tokens = (sub.tokens || 0) + plan.tokens; }
+  }
   saveSubscription(sub);
   closePayment();
   toast('🎉 ' + plan.name + ' activado!', 'success');
@@ -3221,14 +3422,14 @@ function getBotResponse(text) {
   return BOT_RESPONSES.default;
 }
 
-function openInitChat(carId) {
+function openInitChat(carId) { openCarChat(carId); }
+function _oldOpenInitChat(carId) {
   var car = carCache[carId];
   if (!car) return;
   activeChatCarId = carId;
   var sub = getSubscription();
   var hasPremium = isSubActive() && sub.plan !== 'trial';
   document.getElementById('init-chat-car-name').textContent = car.marca + ' ' + car.modelo + ' ' + (car.anio || '');
-  document.getElementById('init-chat-tokens').textContent = sub.tokens || 0;
   // Close car detail first so init modal appears on top
   document.getElementById('car-detail-modal').classList.add('hidden');
   if (hasPremium) {
@@ -3238,15 +3439,7 @@ function openInitChat(carId) {
   }
 }
 
-function startChatWithToken() {
-  var sub = getSubscription();
-  if ((sub.tokens || 0) <= 0) { toast('Sin tokens. Comprá en Suscripción.', 'error'); return; }
-  sub.tokens--;
-  saveSubscription(sub);
-  document.getElementById('init-chat-modal').classList.add('hidden');
-  toast('🪙 Token usado. Chat iniciado!', 'success');
-  startChatFree(activeChatCarId);
-}
+function startChatWithToken() { openCarChat(currentChatCarId || activeChatCarId); }
 
 function startChatWithPremium() {
   document.getElementById('init-chat-modal').classList.add('hidden');
