@@ -2235,7 +2235,7 @@ function carCardHTML(car, isMine, matchPct) {
   var imgCnt = imgs.length > 1 ? '<div class="img-counter">📷 ' + imgs.length + '</div>' : '';
   var locationStr = car.localidad ? '<div class="car-location">📍 ' + esc(car.localidad) + (car.provincia ? ', ' + esc(car.provincia) : '') + '</div>' : '';
   var matchHTML = matchPct != null ? '<div class="match-pill ' + matchClass(matchPct) + '">🎯 Match ' + matchPct + '%</div><div class="match-bar-wrap"><div class="match-bar" style="width:' + matchPct + '%;background:' + matchColor(matchPct) + '"></div></div>' : '';
-  var actions = isMine ? '<div class="car-actions"><button type="button" class="btn-sm" onclick="openEditCar(event,\'' + car.id + '\')">✏️ Editar</button><button type="button" class="btn-sm danger" onclick="deleteCar(\'' + car.id + '\',event)">Eliminar</button></div>' : '';
+  var actions = isMine ? '<div class="car-actions"><button type="button" class="btn-sm" onclick="openEditCar(event,\'' + car.id + '\')">&#9999;&#65039; Editar</button><button type="button" class="btn-sm danger" onclick="deleteCar(\'' + car.id + '\',event)">Eliminar</button><button type="button" class="btn-sm primary" onclick="event.stopPropagation();openCarSellerChats(\'' + car.id + '\')">&#128172; Consultas</button></div>' : '';
   var precioInfoHTML = car.precio_info ? '<div class="car-price-info">' + (isMine ? '' : '<span style="color:var(--text3)">Precio de info:</span> ') + esc(car.precio_info) + '</div>' : '';
   var cardClass = 'car-card' + (isDestacat ? ' destacado' : isSuperOport ? ' super-oportunidad' : isOport ? ' oportunidad' : isNuevo ? ' nuevo' : '');
 
