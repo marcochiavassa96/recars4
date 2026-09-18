@@ -620,6 +620,32 @@ button,a,.nav-item,.bn-item,.car-card,.plan-card,.pay-method,.quick-action{touch
 
 .chat-list-item{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:var(--transition)}
 .chat-list-item:hover,.chat-list-item.active{background:var(--accent-light)}
+
+/* ── MOBILE OPTIMIZATIONS ── */
+@media(max-width:768px) {
+  /* Messages page - stack on mobile */
+  #page-messages > div > div:first-child { display:none }
+  #page-messages > div { grid-template-columns:1fr !important }
+  #page-messages > div > div:last-child { min-height:70vh }
+  /* Car cards full width */
+  .cars-grid { grid-template-columns:1fr !important }
+  /* Negotiation modal full screen */
+  #negotiation-modal .modal-box { max-height:100dvh !important; border-radius:0 !important; margin:0 !important; height:100dvh }
+  /* Home layout stack */
+  .home-layout { grid-template-columns:1fr !important }
+  /* Metrics 2 col on mobile */
+  .metrics-grid { grid-template-columns:1fr 1fr !important }
+  /* Bottom padding for nav */
+  .page { padding-bottom:calc(var(--bottom-nav-h) + 20px) !important }
+  /* Chat input fix */
+  #active-chat-input-wrap { position:sticky;bottom:0;background:#fff }
+}
+@media(max-width:480px) {
+  .metrics-grid { grid-template-columns:1fr !important }
+  .quick-actions { grid-template-columns:1fr 1fr !important }
+  .car-actions { flex-direction:column !important }
+  .car-actions .btn-sm { width:100% !important; text-align:center }
+}
 </style>
 </head>
 <body>
@@ -1242,15 +1268,7 @@ button,a,.nav-item,.bn-item,.car-card,.plan-card,.pay-method,.quick-action{touch
           <!-- Credits/Subscription -->
           <div class="activity-card">
             <div class="section-label" style="margin-bottom:14px">Créditos disponibles</div>
-            <div class="credits-card">
-              <div class="credits-title">TOKENS</div>
-              <div class="credits-number" id="home-tokens">0</div>
-              <div class="credits-sub">disponibles para usar</div>
-              <div class="credits-bar"><div class="credits-bar-fill" id="home-tokens-bar" style="width:0%"></div></div>
-              <span class="credits-link" onclick="navigate('suscripcion')">Ver planes y créditos</span>
-            </div>
-          </div>
-        </div>
+            <div class="activity-card"><div class="section-label" style="margin-bottom:10px">Mi plan</div><button type="button" onclick="navigate('suscripcion')" class="btn-outline" style="width:100%;font-size:0.8rem">Ver planes PRO</button></div>
       </div>
     </div>
 
@@ -1616,10 +1634,17 @@ function openMsgChat(carId, buyerId) {
 }
 
 function _loadAndRenderMsgs(carId, buyerId) {
+  // Load all messages for this car that involve either the buyer or current user
   getSB().from('messages').select('*').eq('car_id', carId)
-    .or('from_user.eq.' + buyerId + ',to_user.eq.' + buyerId)
     .order('created_at', { ascending: true })
-    .then(function(r) { _renderMsgs(r.data || []); });
+    .then(function(r) {
+      var msgs = (r.data || []).filter(function(m) {
+        return m.from_user === buyerId || m.to_user === buyerId ||
+               m.from_user === (currentUser && currentUser.id) ||
+               m.to_user === (currentUser && currentUser.id);
+      });
+      _renderMsgs(msgs);
+    });
 }
 
 function _renderMsgs(msgs) {
@@ -1685,7 +1710,12 @@ function loadMessagesPage() {
       var msgs = r.data || [];
       var convMap = {};
       msgs.forEach(function(m) {
-        var buyerId = m.from_user === currentUser.id ? m.to_user : m.from_user;
+        // The buyer is the non-bot participant who is not the car owner
+        // We need to group by car + buyer pair
+        var otherId = m.from_user === currentUser.id ? m.to_user : m.from_user;
+        // For bot messages (from_user === to_user), otherId would be currentUser - skip
+        if (otherId === currentUser.id && !(m.message||'').startsWith('[BOT]')) return;
+        var buyerId = otherId === currentUser.id ? currentUser.id : otherId;
         var key = (m.car_id||'') + '|' + buyerId;
         if (!convMap[key]) convMap[key] = { carId: m.car_id, buyerId: buyerId, lastMsg: m.message, ts: m.created_at };
       });
@@ -2247,7 +2277,7 @@ function carCardHTML(car, isMine, matchPct) {
     '<div class="car-meta">' + (car.anio || '') + ' · ' + fmtKm(car.km) + ' · ' + esc(car.color || '') + '</div>' +
     locationStr +
     '<div class="car-price">' + fmtPrice(car.precio) + '</div>' +
-  (car.precio && !isMine ? (function(){ var c = calcCommission(car.precio, FREE_COMMISSION_RATE); return '<div style="font-size:0.72rem;color:var(--text3);margin-top:2px">Total c/comisión: <strong>' + fmtPrice(c.finalPrice) + '</strong></div>'; })() : '') +
+  // commission hidden from cards - price already includes it
     precioInfoHTML + actions +
     '</div></div>';
 }
@@ -2921,9 +2951,12 @@ function updateSubUI() {
   var expiryLabel = document.getElementById('sub-expiry-label');
   var countdownBar = document.getElementById('sub-countdown-bar');
   var countdownFill = document.getElementById('sub-countdown-fill');
-  // Commission display
   var commDisp = document.getElementById('sub-commission-display');
   if (commDisp) commDisp.textContent = fmtCommissionLabel(getCommissionRate());
+  var homePlan = document.getElementById('home-plan-badge');
+  if (homePlan) homePlan.textContent = isSubActive() ? 'Plan PRO ⭐' : 'Plan Gratis';
+  var homeComm = document.getElementById('home-commission-rate');
+  if (homeComm) homeComm.textContent = 'Comision: ' + fmtCommissionLabel(getCommissionRate());
   
   
   if (badge) {
@@ -4163,7 +4196,12 @@ function openNegotiationModal(op) {
   // Commission block
   var rate = op.commission_rate || getCommissionRate();
   var price = op.agreed_price || op.current_offer || op.initial_price;
-  document.getElementById('neg-commission-block').innerHTML = commissionBlockHTML(price, rate);
+  var isBuyerView = op.buyer_id === (currentUser && currentUser.id);
+  document.getElementById('neg-commission-block').innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">' +
+      '<span style="font-size:0.82rem;color:var(--text2)">' + (isBuyerView ? 'Precio publicado' : 'Tu precio de venta') + '</span>' +
+      '<span style="font-size:1.1rem;font-weight:700;color:var(--text)">' + fmtPrice(price) + '</span>' +
+    '</div>';
 
   // History
   renderNegHistory(op);
@@ -4205,11 +4243,17 @@ function renderNegHistory(op) {
       return '<div style="text-align:center;padding:8px 0"><span style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:0.74rem;color:var(--text3)">' + item.text + '</span></div>';
     }
     if (isProposal) {
-      var c2 = calcCommission(item.price, op.commission_rate);
+      var isBuyer = op.buyer_id === (currentUser && currentUser.id);
+      var displayPrice = isBuyer ? (item.buyerPrice || item.finalPrice || item.price) : item.price;
+      var displayLabel = isBuyer ? 'Precio total que pagás' : 'Precio que recibís';
+      var labelSender = isMe ? (isBuyer ? 'Tu oferta' : 'Tu contraoferta') : (isBuyer ? 'Contraoferta del vendedor' : 'Oferta del comprador');
       return '<div style="margin:8px 0"><div style="background:' + (isMe ? 'var(--accent-light)' : 'var(--bg)') + ';border:1px solid var(--border);border-radius:var(--radius);padding:14px;max-width:85%;' + (isMe?'margin-left:auto':'') + '">' +
-        '<div style="font-size:0.72rem;font-weight:600;color:var(--text3);margin-bottom:8px">' + (isMe?'Tu propuesta':'Propuesta de la agencia') + ' · ' + new Date(item.ts).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}) + '</div>' +
-        commissionBlockHTML(item.price, op.commission_rate) +
-        (item.note ? '<div style="font-size:0.8rem;color:var(--text2);margin-top:8px;font-style:italic">"' + esc(item.note) + '"</div>' : '') +
+        '<div style="font-size:0.72rem;font-weight:600;color:var(--text3);margin-bottom:8px">' + labelSender + ' · ' + new Date(item.ts).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}) + '</div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">' +
+          '<span style="color:var(--text2);font-size:0.84rem">' + displayLabel + '</span>' +
+          '<span style="font-weight:700;font-size:1.1rem;color:var(--accent)">' + fmtPrice(displayPrice) + '</span>' +
+        '</div>' +
+        (item.note ? '<div style="font-size:0.8rem;color:var(--text2);margin-top:8px;font-style:italic;border-top:1px solid var(--border);padding-top:8px">"' + esc(item.note) + '"</div>' : '') +
         '</div></div>';
     }
     if (isAccepted) {
@@ -4238,7 +4282,7 @@ function renderNegActions(op, isBuyer, isSeller) {
         '<button type="button" class="btn-sm" onclick="showMakeProposal()" style="flex:1;padding:10px">💰 Hacer propuesta</button>' +
       '</div>' +
       '<div id="make-proposal-form" style="display:none;background:var(--bg);border-radius:var(--radius);padding:14px;margin-bottom:10px">' +
-        '<div style="font-size:0.78rem;color:var(--text2);margin-bottom:8px">Tu propuesta de precio (lo que recibe el vendedor):</div>' +
+        '<div style="font-size:0.78rem;color:var(--text2);margin-bottom:8px">Tu oferta (precio total que vas a pagar):</div>' +
         '<div style="display:flex;gap:8px;margin-bottom:8px">' +
           '<input type="number" id="proposal-price" class="form-input" placeholder="Ej: 18500000" style="flex:1" oninput="previewProposal()">' +
         '</div>' +
@@ -4287,24 +4331,34 @@ function previewProposal() {
   var prev = document.getElementById('proposal-preview');
   if (!prev) return;
   if (price > 0 && activeOperation) {
-    prev.innerHTML = commissionBlockHTML(price, activeOperation.commission_rate || getCommissionRate());
+    var rate = activeOperation.commission_rate || getCommissionRate();
+    var sellerReceives = Math.round(price / (1 + rate));
+    var commission = price - sellerReceives;
+    prev.innerHTML = '<div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:0.84rem">' +
+      '<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:var(--text2)">Tu oferta (pagas)</span><span style="font-weight:700;color:var(--accent)">' + fmtPrice(price) + '</span></div>' +
+      '<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:var(--text3);font-size:0.76rem">Comisión ReCars incluida</span><span style="font-size:0.76rem;color:var(--text3)">-' + fmtPrice(commission) + '</span></div>' +
+      '</div>';
   } else {
     prev.innerHTML = '';
   }
 }
 
 function sendProposal() {
-  var price = parseFloat(document.getElementById('proposal-price').value) || 0;
+  var buyerPrice = parseFloat(document.getElementById('proposal-price').value) || 0;
   var note = document.getElementById('proposal-note').value.trim();
-  if (!price || price <= 0) { toast('Ingresá un precio válido', 'error'); return; }
+  if (!buyerPrice || buyerPrice <= 0) { toast('Ingresá un precio válido', 'error'); return; }
   if (!activeOperation) return;
-  var c = calcCommission(price, activeOperation.commission_rate);
+  var rate = activeOperation.commission_rate || getCommissionRate();
+  // Buyer enters total they pay; seller sees what they receive
+  var sellerReceives = Math.round(buyerPrice / (1 + rate));
+  var commission = buyerPrice - sellerReceives;
   var proposal = {
     type: 'proposal',
     sender_id: currentUser.id,
-    price: price,
-    commission: c.commission,
-    finalPrice: c.finalPrice,
+    price: sellerReceives,      // what seller receives
+    buyerPrice: buyerPrice,     // what buyer pays (total)
+    commission: commission,
+    finalPrice: buyerPrice,
     note: note,
     ts: new Date().toISOString()
   };
