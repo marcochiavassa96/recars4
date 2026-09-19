@@ -1563,19 +1563,21 @@ function openCarChat(carId) {
     return;
   }
   if (car.owner_id === currentUser.id) { toast('Es tu propio vehiculo', 'info'); return; }
+  var buyerId = currentUser.id;
+  var sellerId = car.owner_id;
   getSB().from('messages').select('id').eq('car_id', carId)
-    .or('from_user.eq.' + currentUser.id + ',to_user.eq.' + currentUser.id)
+    .eq('from_user', buyerId)
     .then(function(r) {
       if (!(r.data && r.data.length)) {
+        // Bot welcome: from=buyer, to=seller so seller can see it
         getSB().from('messages').insert({
-          from_user: currentUser.id, to_user: currentUser.id,
+          from_user: buyerId, to_user: sellerId,
           car_id: carId,
-          message: '[BOT] Hola! Soy el asistente ReCars. Consultame sobre el ' +
-            (car.marca||'') + ' ' + (car.modelo||'') +
-            ': precio, financiacion BNA, papeles, permuta o formas de pago.'
+          message: '[BOT] Hola! Soy el asistente ReCars. El comprador abrio una consulta sobre tu ' +
+            (car.marca||'') + ' ' + (car.modelo||'') + '.'
         }).then(function() {
           navigate('messages');
-          setTimeout(function() { loadMessagesPage(); openMsgChat(carId, currentUser.id); }, 400);
+          setTimeout(function() { loadMessagesPage(); openMsgChat(carId, buyerId); }, 400);
         });
       } else {
         navigate('messages');
@@ -1634,17 +1636,11 @@ function openMsgChat(carId, buyerId) {
 }
 
 function _loadAndRenderMsgs(carId, buyerId) {
-  // Load all messages for this car that involve either the buyer or current user
+  // RLS ensures user only gets messages they're part of
+  // Just filter by car_id - no user filter needed
   getSB().from('messages').select('*').eq('car_id', carId)
     .order('created_at', { ascending: true })
-    .then(function(r) {
-      var msgs = (r.data || []).filter(function(m) {
-        return m.from_user === buyerId || m.to_user === buyerId ||
-               m.from_user === (currentUser && currentUser.id) ||
-               m.to_user === (currentUser && currentUser.id);
-      });
-      _renderMsgs(msgs);
-    });
+    .then(function(r) { _renderMsgs(r.data || []); });
 }
 
 function _renderMsgs(msgs) {
@@ -1678,16 +1674,20 @@ function sendActiveMessage() {
   input.value = '';
   var car = carCache[activeMsgCarId] || {};
   var isSeller = car.owner_id === currentUser.id;
-  var toUser = isSeller ? activeMsgBuyerId : (car.owner_id || activeMsgBuyerId);
+  // Always: buyer sends to seller, seller sends to buyer
+  var toUser = isSeller ? activeMsgBuyerId : car.owner_id;
+  if (!toUser) { toast('Error: no se pudo determinar el destinatario', 'error'); return; }
   getSB().from('messages').insert({
     from_user: currentUser.id, to_user: toUser,
     car_id: activeMsgCarId, message: text
   }).then(function() {
     _loadAndRenderMsgs(activeMsgCarId, activeMsgBuyerId);
+    // Bot only replies to buyer (not seller)
     if (!isSeller) {
       setTimeout(function() {
         var responses = getBotResponse(text, car);
         var resp = Array.isArray(responses) ? responses[Math.floor(Math.random()*responses.length)] : responses;
+        // Bot replies FROM buyer TO buyer (only buyer sees bot replies)
         getSB().from('messages').insert({
           from_user: currentUser.id, to_user: currentUser.id,
           car_id: activeMsgCarId,
@@ -1710,14 +1710,26 @@ function loadMessagesPage() {
       var msgs = r.data || [];
       var convMap = {};
       msgs.forEach(function(m) {
-        // The buyer is the non-bot participant who is not the car owner
-        // We need to group by car + buyer pair
+        // Group conversations by car + buyer (non-seller) pair
+        // For each message, determine who the buyer is
+        // Buyer = the one who is NOT the car owner
+        // We'll resolve this after loading car data
+        // For now group by car + the non-current-user participant
         var otherId = m.from_user === currentUser.id ? m.to_user : m.from_user;
-        // For bot messages (from_user === to_user), otherId would be currentUser - skip
-        if (otherId === currentUser.id && !(m.message||'').startsWith('[BOT]')) return;
-        var buyerId = otherId === currentUser.id ? currentUser.id : otherId;
-        var key = (m.car_id||'') + '|' + buyerId;
-        if (!convMap[key]) convMap[key] = { carId: m.car_id, buyerId: buyerId, lastMsg: m.message, ts: m.created_at };
+        // Skip pure self-messages that aren't bot messages
+        if (otherId === currentUser.id && !(m.message||'').startsWith('[BOT]')) {
+          // Self-message means buyer sent bot message - use currentUser as buyer
+          otherId = currentUser.id;
+        }
+        // Key: car_id + the "other" person (could be buyer or seller depending on role)
+        var key = (m.car_id||'') + '|' + (otherId === currentUser.id ? 'self' : otherId);
+        if (!convMap[key]) convMap[key] = {
+          carId: m.car_id,
+          otherId: otherId,
+          buyerId: null, // will resolve below
+          lastMsg: m.message,
+          ts: m.created_at
+        };
       });
       var convs = Object.values(convMap);
       if (!convs.length) {
@@ -1729,15 +1741,17 @@ function loadMessagesPage() {
         (r2.data||[]).forEach(function(car) { carMap[car.id] = car; carCache[car.id] = car; });
         listEl.innerHTML = convs.map(function(cv) {
           var car = carMap[cv.carId] || {};
-          var isBuyer = car.owner_id !== currentUser.id;
+          var iAmSeller = car.owner_id === currentUser.id;
+          // If I'm seller, the buyer is the other person; if I'm buyer, pass my own id
+          var chatBuyerId = iAmSeller ? cv.otherId : currentUser.id;
           var imgs = Array.isArray(car.images)&&car.images.length ? car.images : (car.image_url?[car.image_url]:[]);
           var thumb = imgs.length ? '<img src="' + imgs[0] + '" style="width:100%;height:100%;object-fit:cover">' : '&#128663;';
           var title = (car.marca||'Auto') + ' ' + (car.modelo||'') + (car.anio?' '+car.anio:'');
           var lastText = (cv.lastMsg||'').replace('[BOT] ','').substring(0,38);
           var time = cv.ts ? new Date(cv.ts).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}) : '';
-          var isActive = cv.carId===activeMsgCarId && cv.buyerId===activeMsgBuyerId;
+          var isActive = cv.carId===activeMsgCarId && chatBuyerId===activeMsgBuyerId;
           return '<div class="chat-list-item' + (isActive?' active':'') + '" ' +
-            'data-carid="' + (cv.carId||'') + '" data-buyerid="' + (cv.buyerId||'') + '" ' +
+            'data-carid="' + (cv.carId||'') + '" data-buyerid="' + (chatBuyerId||'') + '" ' +
             'onclick="openMsgChat(this.dataset.carid,this.dataset.buyerid)">' +
             '<div style="width:44px;height:36px;border-radius:8px;overflow:hidden;background:var(--bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px">' + thumb + '</div>' +
             '<div style="flex:1;min-width:0">' +
